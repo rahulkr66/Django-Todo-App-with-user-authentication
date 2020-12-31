@@ -5,8 +5,13 @@ from django.db import IntegrityError
 from django.contrib.auth import login, logout, authenticate
 from .forms import TodoForm
 from .models import Todo
+from django.utils import timezone
 
 # Create your views here.
+
+
+def home(request):
+    return render(request, 'todo/home.html')
 
 
 def signupuser(request):
@@ -49,16 +54,6 @@ def logoutuser(request):
         return redirect('home')
 
 
-def currenttodos(request):
-    todos = Todo.objects.filter(user=request.user, completed__isnull=True)
-    return render(request, 'todo/currenttodos.html', {'todos': todos})
-
-
-def viewtodo(request, todo_pk):
-    todo = get_object_or_404(Todo, pk=todo_pk)
-    return render(request, 'todo/viewtodo.html', {'todo': todo})
-
-
 def home(request):
     return render(request, 'todo/home.html')
 
@@ -75,3 +70,38 @@ def createtodos(request):
             return redirect('currenttodos')
         except ValueError:
             return render(request, 'todo/createtodos.html', {'form': TodoForm(), 'error': 'Bad Data Entry'})
+
+
+def currenttodos(request):
+    todos = Todo.objects.filter(user=request.user, completed__isnull=True)
+    return render(request, 'todo/currenttodos.html', {'todos': todos})
+
+
+def viewtodo(request, todo_pk):
+    todo = get_object_or_404(Todo, pk=todo_pk, user=request.user)
+    if request.method == 'GET':
+        form = TodoForm(instance=todo)
+        return render(request, 'todo/viewtodo.html', {'todo': todo, 'form': form})
+    else:
+        try:
+            form = TodoForm(request.POST, instance=todo)
+            form.save()
+            return redirect('currenttodos')
+        except ValueError:
+            return render(request, 'todo/viewtodo.html', {'todo': todo, 'form': form, 'error': "Bad Data Entered!"})
+
+
+def completetodo(request, todo_pk):
+    todo = get_object_or_404(Todo, pk=todo_pk, user=request.user)
+    if request.method == 'POST':
+        todo.completed = timezone.now()
+        todo.save()
+        return redirect('currenttodos')
+
+
+def deletetodo(request, todo_pk):
+    todo = get_object_or_404(Todo, pk=todo_pk, user=request.user)
+    if request.method == 'POST':
+        todo.completed = timezone.now()
+        todo.delete()
+        return redirect('currenttodos')

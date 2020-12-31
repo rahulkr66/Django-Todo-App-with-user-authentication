@@ -1,4 +1,20 @@
 {%extends 'todo/base.html'%}
 {%block content%}
+    {{error}}
     <h1>{{todo.title}}</h1>
+    <form method="POST">
+        {{form.as_p}}
+        {%csrf_token%}
+        <button type="submit">Make Changes</button>
+    </form>
+    <form method="POST" action="{%url 'completetodo' todo.id%}">
+
+        {%csrf_token%}
+        <button type="submit">Finish</button>
+    </form>
+    <form method="POST" action="{%url 'deletetodo' todo.id%}">
+
+        {%csrf_token%}
+        <button type="submit">Delete</button>
+    </form>
 {%endblock%}
